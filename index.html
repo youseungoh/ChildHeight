@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="theme-color" content="#FFD84D" />
+<title>Child Height Prediction</title>
+<style>
+  :root{
+    --yellow:#FFD84D;
+    --yellow-soft:#FFF6D6;
+    --yellow-deep:#F5C518;
+    --cream:#FBF3DE;
+    --brown:#5B4636;
+    --green:#7BC96F;
+    --green-deep:#5FB055;
+    --text:#2B2B2B;
+    --sub:#8A8A8A;
+    --line:#EFE7D0;
+    --white:#FFFFFF;
+    --shadow:0 10px 30px rgba(91,70,54,.10);
+    --radius:22px;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',sans-serif;
+    color:var(--text);
+    background:#FFFDF5;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    max-width:460px;
+    margin:0 auto;
+    min-height:100vh;
+    background:#FFFDF5;
+    position:relative;
+    padding-bottom:120px;
+  }
+
+  /* ---------- Header ---------- */
+  .header{
+    text-align:center;
+    padding:26px 20px 10px;
+  }
+  .header h1{
+    margin:0;
+    font-size:27px;
+    font-weight:800;
+    letter-spacing:-.5px;
+    color:var(--yellow-deep);
+  }
+  .header .sub{
+    margin-top:4px;
+    font-size:13px;
+    color:var(--sub);
+  }
+  .hero .credit{
+    position:absolute;
+    bottom:12px;
+    right:16px;
+    font-size:10.5px;
+    letter-spacing:.2px;
+    color:#a99a6e;
+    font-weight:600;
+    z-index:2;
+  }
+
+  /* ---------- Lucide icons ---------- */
+  .ic{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;}
+  .ic svg{display:block;}
+  .q .title .ic{margin-right:8px;color:var(--brown);vertical-align:-4px;}
+  .bl .ic{margin-right:6px;vertical-align:-3px;color:var(--brown);}
+  .p-title .ic{margin-right:6px;vertical-align:-4px;color:var(--yellow-deep);}
+  .p-warn .ic{margin-right:5px;vertical-align:-3px;color:#c98a2f;}
+
+  .hero{
+    margin:14px 18px 0;
+    background:var(--cream);
+    border-radius:26px;
+    overflow:hidden;
+    position:relative;
+    height:190px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .hero svg{display:block;}
+
+  /* ---------- Progress ---------- */
+  .progress{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    margin:22px 0 4px;
+  }
+  .progress .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#EADFBE;transition:.3s;
+  }
+  .progress .dot.active{background:var(--yellow-deep);width:22px;border-radius:6px;}
+  .progress .dot.done{background:var(--green);}
+
+  /* ---------- Card ---------- */
+  .card{
+    margin:14px 18px 0;
+    background:var(--yellow);
+    border-radius:var(--radius);
+    padding:26px 22px 28px;
+    box-shadow:var(--shadow);
+  }
+  .card.plain{background:var(--white);border:1px solid var(--line);}
+
+  .q{margin-top:26px;}
+  .q:first-child{margin-top:0;}
+  .q .title{font-size:19px;font-weight:800;letter-spacing:-.5px;}
+  .q .desc{font-size:13px;color:#7a6a4d;margin-top:4px;}
+  .card.plain .q .desc{color:var(--sub);}
+
+  /* ---------- Toggle / chips ---------- */
+  .toggle{display:flex;gap:12px;margin-top:14px;}
+  .toggle button{
+    flex:1;
+    padding:16px 0;
+    border:none;
+    border-radius:16px;
+    background:var(--white);
+    color:var(--text);
+    font-size:16px;font-weight:700;
+    cursor:pointer;
+    transition:.15s;
+    box-shadow:0 2px 6px rgba(91,70,54,.06);
+  }
+  .toggle button.sel{background:var(--brown);color:#fff;transform:translateY(-1px);}
+
+  .chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px;}
+  .chips button{
+    padding:11px 16px;
+    border:none;
+    border-radius:14px;
+    background:var(--white);
+    color:var(--text);
+    font-size:14px;font-weight:600;
+    cursor:pointer;
+    transition:.15s;
+    box-shadow:0 2px 6px rgba(91,70,54,.05);
+  }
+  .chips button.sel{background:var(--green);color:#fff;}
+  .card.plain .chips button.sel{background:var(--green);}
+
+  /* ---------- Inputs ---------- */
+  .field{
+    margin-top:14px;
+    position:relative;
+    background:var(--white);
+    border-radius:16px;
+    display:flex;align-items:center;
+    padding:0 16px;
+    box-shadow:0 2px 6px rgba(91,70,54,.05);
+  }
+  .field input{
+    flex:1;
+    border:none;outline:none;background:transparent;
+    padding:16px 0;
+    font-size:16px;
+    color:var(--text);
+    font-family:inherit;
+    width:100%;
+  }
+  .field .unit{color:var(--sub);font-size:14px;font-weight:600;padding-left:8px;}
+  .field .lbl{color:var(--sub);font-size:14px;padding-right:8px;white-space:nowrap;}
+  .row{display:flex;gap:12px;}
+  .row .field{flex:1;margin-top:14px;}
+
+  input::placeholder{color:#c3b795;}
+  input[type=date]{color:var(--text);}
+  input[type=date]:invalid{color:#c3b795;}
+
+  /* ---------- Accordion (grandparents) ---------- */
+  .accordion{
+    margin-top:16px;
+    background:rgba(255,255,255,.55);
+    border-radius:16px;
+    overflow:hidden;
+  }
+  .card.plain .accordion{background:var(--yellow-soft);}
+  .acc-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:15px 16px;cursor:pointer;font-weight:700;font-size:15px;
+  }
+  .acc-head .plus{transition:.25s;font-size:20px;color:var(--brown);}
+  .acc-body{display:none;padding:0 14px 16px;}
+  .accordion.open .acc-body{display:block;}
+  .accordion.open .acc-head .plus{transform:rotate(45deg);}
+  .acc-note{font-size:12px;color:#7a6a4d;padding:0 2px 4px;}
+
+  .err{color:#c0392b;font-size:13px;margin-top:12px;font-weight:600;display:none;}
+  .err.show{display:block;}
+
+  /* ---------- Footer nav ---------- */
+  .nav{
+    position:fixed;left:0;right:0;bottom:0;
+    max-width:460px;margin:0 auto;
+    padding:14px 18px 22px;
+    background:linear-gradient(to top,#FFFDF5 70%,rgba(255,253,245,0));
+    display:flex;gap:12px;
+  }
+  .nav button{
+    padding:17px 0;border:none;border-radius:18px;
+    font-size:16px;font-weight:800;cursor:pointer;flex:1;
+    transition:.15s;font-family:inherit;
+  }
+  .btn-prev{background:#fff;color:var(--text);border:1.5px solid var(--line)!important;flex:.6;}
+  .btn-next{background:#1d1d1d;color:#fff;}
+  .btn-next:active{transform:scale(.98);}
+  .btn-result{background:var(--green);color:#fff;}
+
+  /* ---------- Result ---------- */
+  .result-head{text-align:center;margin:8px 18px 0;}
+  .result-head .big{
+    font-size:15px;color:var(--sub);font-weight:600;
+  }
+  .predict-card{
+    margin:16px 18px 0;
+    background:linear-gradient(135deg,var(--yellow) 0%,var(--yellow-deep) 100%);
+    border-radius:26px;padding:30px 22px;text-align:center;
+    box-shadow:var(--shadow);
+  }
+  .predict-card .label{font-size:15px;font-weight:700;color:#6b5636;}
+  .predict-card .num{font-size:52px;font-weight:900;letter-spacing:-2px;margin:6px 0 2px;color:#3a2f22;}
+  .predict-card .num small{font-size:22px;font-weight:800;}
+  .predict-card .range{
+    display:inline-block;margin-top:8px;padding:7px 16px;border-radius:30px;
+    background:rgba(255,255,255,.6);font-weight:700;font-size:15px;color:#5b4636;
+  }
+  .predict-card .disc{margin-top:12px;font-size:12px;color:#7a6547;}
+
+  .section{margin:22px 18px 0;background:#fff;border:1px solid var(--line);border-radius:22px;padding:22px 20px;box-shadow:0 4px 14px rgba(91,70,54,.05);}
+  .section h3{margin:0 0 4px;font-size:17px;font-weight:800;letter-spacing:-.5px;}
+  .section .h-sub{font-size:12.5px;color:var(--sub);margin-bottom:14px;}
+
+  /* breakdown */
+  .bd-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px;}
+  .bd-row:last-child{border-bottom:none;}
+  .bd-row .k{color:var(--sub);}
+  .bd-row .v{font-weight:700;}
+  .bd-row.total .k{color:var(--text);font-weight:800;}
+  .bd-row.total .v{color:var(--green-deep);font-size:16px;}
+  .plus-v{color:var(--green-deep);}
+  .minus-v{color:#c0392b;}
+
+  /* score ring */
+  .score-wrap{display:flex;align-items:center;gap:18px;}
+  .ring{
+    width:110px;height:110px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;position:relative;
+  }
+  .ring .inner{
+    width:82px;height:82px;background:#fff;border-radius:50%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .ring .inner b{font-size:28px;font-weight:900;line-height:1;color:var(--green-deep);}
+  .ring .inner span{font-size:11px;color:var(--sub);margin-top:2px;}
+  .score-msg{font-size:13.5px;color:var(--text);flex:1;}
+  .score-msg b{color:var(--green-deep);}
+
+  /* bars */
+  .bar-item{margin-top:14px;}
+  .bar-item .bl{display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;margin-bottom:6px;}
+  .bar-item .bl .pct{color:var(--sub);font-weight:700;}
+  .bar-track{height:10px;background:#F0ECdf;border-radius:6px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:6px;background:var(--green);transition:width .8s ease;}
+  .bar-fill.low{background:#F2B84B;}
+
+  /* percentile */
+  .pct-big{text-align:center;padding:6px 0;}
+  .pct-big .p{font-size:38px;font-weight:900;color:var(--yellow-deep);letter-spacing:-1px;}
+  .pct-line{position:relative;height:14px;border-radius:8px;margin:18px 6px 8px;
+    background:linear-gradient(90deg,#CDE9C6,#FFE9A8,#FFC9A8);}
+  .pct-marker{position:absolute;top:-6px;width:4px;height:26px;background:#1d1d1d;border-radius:3px;transform:translateX(-50%);}
+  .pct-scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--sub);margin:0 4px;}
+
+  /* tips */
+  .tip{display:flex;gap:12px;padding:13px 0;border-bottom:1px dashed var(--line);}
+  .tip:last-child{border-bottom:none;}
+  .tip .ico{width:36px;height:36px;border-radius:11px;background:var(--yellow-soft);display:flex;align-items:center;justify-content:center;color:var(--brown);flex-shrink:0;margin-top:2px;}
+  .tip .tt{font-size:14px;}
+  .tip .tt b{display:block;margin-bottom:2px;font-size:14.5px;}
+  .tip .tt span{color:var(--sub);font-size:13px;}
+
+  .principle{
+    margin-top:18px;
+    background:var(--yellow-soft);
+    border-radius:16px;
+    padding:16px 18px;
+  }
+  .principle .p-title{font-weight:800;font-size:14.5px;margin-bottom:8px;}
+  .principle p{margin:0 0 9px;font-size:13px;line-height:1.7;color:#5a5040;}
+  .principle p:last-child{margin-bottom:0;}
+  .principle .p-warn{color:#9a6b2f;background:#FDEFC8;border-radius:10px;padding:10px 12px;font-size:12.5px;}
+
+  .disclaimer{
+    margin:22px 18px 0;font-size:11.5px;color:#9a9a9a;line-height:1.6;
+    background:#F6F4EC;border-radius:16px;padding:16px 18px;
+  }
+  .restart{
+    margin:16px 18px 0;text-align:center;
+  }
+  .restart button{
+    background:none;border:none;color:var(--sub);font-size:14px;font-weight:700;
+    text-decoration:underline;cursor:pointer;font-family:inherit;padding:8px;
+  }
+
+  /* ---------- Footer ---------- */
+  .footer{
+    margin:34px 18px 10px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+    text-align:center;
+    font-size:11.5px;
+    line-height:1.8;
+    color:#a7a190;
+  }
+  .footer a{color:#8a8470;text-decoration:none;font-weight:600;}
+  .footer a:hover{text-decoration:underline;}
+  .footer .music{margin-top:2px;}
+
+  .hidden{display:none!important;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== Header ===== -->
+  <div class="header">
+    <h1>Child Height Prediction</h1>
+    <div class="sub">우리 아이의 예상 키와 성장 잠재력을 확인해보세요</div>
+  </div>
+
+  <div class="hero" id="hero">
+    <div class="credit">©Produced by You Seungoh</div>
+    <svg width="440" height="190" viewBox="0 0 440 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- ground shadow -->
+      <ellipse cx="220" cy="182" rx="150" ry="10" fill="#EFE3C6"/>
+      <!-- giraffe neck as ruler -->
+      <rect x="330" y="40" width="46" height="150" rx="14" fill="#E9C46A"/>
+      <!-- spots -->
+      <circle cx="345" cy="70" r="7" fill="#D9A94E"/>
+      <circle cx="362" cy="95" r="6" fill="#D9A94E"/>
+      <circle cx="345" cy="120" r="7" fill="#D9A94E"/>
+      <circle cx="363" cy="145" r="6" fill="#D9A94E"/>
+      <circle cx="346" cy="168" r="6" fill="#D9A94E"/>
+      <!-- ruler ticks -->
+      <g stroke="#8A6B3A" stroke-width="2" stroke-linecap="round">
+        <line x1="376" y1="55" x2="366" y2="55"/>
+        <line x1="376" y1="70" x2="370" y2="70"/>
+        <line x1="376" y1="85" x2="366" y2="85"/>
+        <line x1="376" y1="100" x2="370" y2="100"/>
+        <line x1="376" y1="115" x2="366" y2="115"/>
+        <line x1="376" y1="130" x2="370" y2="130"/>
+        <line x1="376" y1="145" x2="366" y2="145"/>
+        <line x1="376" y1="160" x2="370" y2="160"/>
+      </g>
+      <!-- head -->
+      <rect x="326" y="12" width="70" height="34" rx="17" fill="#E9C46A"/>
+      <rect x="384" y="16" width="22" height="20" rx="10" fill="#E9C46A"/>
+      <!-- ossicones -->
+      <line x1="345" y1="14" x2="343" y2="0" stroke="#C89A4A" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="342" cy="-1" r="4" fill="#5B4636"/>
+      <line x1="360" y1="14" x2="362" y2="0" stroke="#C89A4A" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="363" cy="-1" r="4" fill="#5B4636"/>
+      <!-- eye -->
+      <circle cx="342" cy="30" r="3.4" fill="#4a3a28"/>
+      <!-- nostril -->
+      <circle cx="399" cy="27" r="2" fill="#B98A44"/>
+
+      <!-- kid (boy) -->
+      <g>
+        <circle cx="150" cy="86" r="30" fill="#F6C9A8"/>
+        <path d="M120 84 q30 -40 60 0 v-14 q-30 -26 -60 0 z" fill="#3a2b22"/>
+        <circle cx="140" cy="86" r="3" fill="#3a2b22"/>
+        <circle cx="160" cy="86" r="3" fill="#3a2b22"/>
+        <path d="M144 96 q6 6 12 0" stroke="#c98" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M116 190 v-40 q0 -34 34 -34 t34 34 v40 z" fill="#FFD84D"/>
+      </g>
+      <!-- kid (girl) -->
+      <g>
+        <path d="M205 60 q45 6 40 60 q-2 40 -40 44 q-38 -4 -40 -44 q-5 -54 40 -60z" fill="#4a3323"/>
+        <circle cx="205" cy="88" r="28" fill="#F6C9A8"/>
+        <circle cx="196" cy="88" r="3" fill="#3a2b22"/>
+        <circle cx="214" cy="88" r="3" fill="#3a2b22"/>
+        <path d="M199 97 q6 6 12 0" stroke="#c98" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M172 190 v-38 q0 -34 33 -34 t33 34 v38 z" fill="#FFE27A"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ===== Progress ===== -->
+  <div class="progress" id="progress">
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+
+  <!-- ============ STEP 1 : 우리 아이 ============ -->
+  <div class="card step" data-step="1">
+    <div class="q">
+      <div class="title">우리 아이의 성별을 알려주세요.</div>
+      <div class="desc">성별에 따라 예상 키 계산이 달라집니다.</div>
+      <div class="toggle" data-group="gender">
+        <button data-val="male">남아</button>
+        <button data-val="female">여아</button>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="title">생년월일을 알려주세요.</div>
+      <div class="field">
+        <input type="date" id="birth" max="2026-12-31" />
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="title">현재 키와 체중을 입력해주세요.</div>
+      <div class="row">
+        <div class="field"><input type="number" id="height" inputmode="decimal" placeholder="키" /><span class="unit">cm</span></div>
+        <div class="field"><input type="number" id="weight" inputmode="decimal" placeholder="체중" /><span class="unit">kg</span></div>
+      </div>
+    </div>
+    <div class="err" id="err1">모든 항목을 입력해주세요.</div>
+  </div>
+
+  <!-- ============ STEP 2 : 부모 · 조부모 ============ -->
+  <div class="card step hidden" data-step="2">
+    <div class="q">
+      <div class="title">부모님 키를 입력해주세요.</div>
+      <div class="desc">유전 예상 키 계산의 핵심 정보예요.</div>
+      <div class="row">
+        <div class="field"><span class="lbl">아빠</span><input type="number" id="dadH" inputmode="decimal" placeholder="키" /><span class="unit">cm</span></div>
+        <div class="field"><span class="lbl">엄마</span><input type="number" id="momH" inputmode="decimal" placeholder="키" /><span class="unit">cm</span></div>
+      </div>
+    </div>
+
+    <div class="accordion" id="gpAcc">
+      <div class="acc-head" onclick="toggleAcc()">
+        <span><span class="ic" data-ic="users" data-sz="18" style="margin-right:7px;vertical-align:-4px;color:var(--brown)"></span>조부모 키 추가하기 (선택)</span>
+        <span class="plus">＋</span>
+      </div>
+      <div class="acc-body">
+        <div class="acc-note">친가·외가에서 <b>키가 가장 큰 한 분</b>의 키를 입력하면 가문 특성을 반영해 정밀도가 올라가요.</div>
+        <div class="field"><span class="lbl">친가 최고</span><input type="number" id="gpP" inputmode="decimal" placeholder="키가 큰 조부모" /><span class="unit">cm</span></div>
+        <div class="field"><span class="lbl">외가 최고</span><input type="number" id="gpM" inputmode="decimal" placeholder="키가 큰 조부모" /><span class="unit">cm</span></div>
+      </div>
+    </div>
+    <div class="err" id="err2">부모님 키를 모두 입력해주세요.</div>
+  </div>
+
+  <!-- ============ STEP 3 : 사춘기 ============ -->
+  <div class="card step hidden" data-step="3">
+    <div class="q">
+      <div class="title">사춘기 증후가 있나요?</div>
+      <div class="desc">사춘기가 시작되면 남은 성장 여력이 달라져요.<br>(변성기, 초경, 급격한 키 성장, 2차 성징 등)</div>
+      <div class="toggle" data-group="puberty">
+        <button data-val="no">아직 없어요</button>
+        <button data-val="yes">시작됐어요</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 4 : 성장환경 설문 ============ -->
+  <div class="card step hidden" data-step="4">
+    <div class="q">
+      <div class="title"><span class="ic" data-ic="moon" data-sz="20"></span>하루 수면 시간은?</div>
+      <div class="desc">성장호르몬은 깊은 잠을 잘 때 가장 많이 나와요.</div>
+      <div class="chips" data-group="sleep">
+        <button data-val="100">9시간 이상</button>
+        <button data-val="75">8~9시간</button>
+        <button data-val="50">7~8시간</button>
+        <button data-val="25">7시간 미만</button>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="title"><span class="ic" data-ic="apple" data-sz="20"></span>영양·식사 상태는?</div>
+      <div class="desc">단백질·유제품·채소를 골고루 먹는지 확인해요.</div>
+      <div class="chips" data-group="nutrition">
+        <button data-val="100">골고루 잘 먹어요</button>
+        <button data-val="60">보통이에요</button>
+        <button data-val="25">편식이 심해요</button>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="title"><span class="ic" data-ic="activity" data-sz="20"></span>운동량은 어떤가요?</div>
+      <div class="desc">줄넘기·달리기 등은 성장판을 자극해요.</div>
+      <div class="chips" data-group="exercise">
+        <button data-val="100">주 4회 이상</button>
+        <button data-val="60">주 1~3회</button>
+        <button data-val="25">거의 안 해요</button>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="title"><span class="ic" data-ic="smile" data-sz="20"></span>스트레스 수준은?</div>
+      <div class="desc">스트레스가 크면 성장호르몬이 억제될 수 있어요.</div>
+      <div class="chips" data-group="stress">
+        <button data-val="100">밝고 편안해요</button>
+        <button data-val="60">보통이에요</button>
+        <button data-val="25">스트레스가 많아요</button>
+      </div>
+    </div>
+    <div class="err" id="err4">모든 항목을 선택해주세요.</div>
+  </div>
+
+  <!-- ============ RESULT ============ -->
+  <div class="step hidden" data-step="5">
+    <div class="result-head">
+      <div class="big">우리 아이의 <b id="rGender">아이</b> 예상 키는</div>
+    </div>
+
+    <div class="predict-card">
+      <div class="label">최종 예상 키</div>
+      <div class="num" id="rCenter">—<small>cm</small></div>
+      <div class="range" id="rRange">— ~ — cm</div>
+      <div class="disc">± 5cm 오차 범위 · 통계적 참고값</div>
+    </div>
+
+    <!-- 계산 근거 -->
+    <div class="section">
+      <h3>계산 근거</h3>
+      <div class="h-sub">유전 기본값에 가문·성장환경을 반영했어요</div>
+      <div class="bd-row"><span class="k">유전 기본 예측 (부모 키)</span><span class="v" id="bdBase">—</span></div>
+      <div class="bd-row" id="bdGpRow"><span class="k">가문 키 보정 (조부모)</span><span class="v" id="bdGp">—</span></div>
+      <div class="bd-row"><span class="k">성장환경 보정</span><span class="v" id="bdEnv">—</span></div>
+      <div class="bd-row total"><span class="k">최종 예상 키</span><span class="v" id="bdTotal">—</span></div>
+    </div>
+
+    <!-- 성장환경 점수 -->
+    <div class="section">
+      <h3>성장환경 점수</h3>
+      <div class="h-sub">좋은 습관은 예상 키의 상단으로 이끌어요</div>
+      <div class="score-wrap">
+        <div class="ring" id="ring">
+          <div class="inner"><b id="scoreNum">0</b><span>/ 100</span></div>
+        </div>
+        <div class="score-msg" id="scoreMsg"></div>
+      </div>
+      <div class="bar-item"><div class="bl"><span><span class="ic" data-ic="moon" data-sz="16"></span>수면</span><span class="pct" id="pSleep">0%</span></div><div class="bar-track"><div class="bar-fill" id="fSleep"></div></div></div>
+      <div class="bar-item"><div class="bl"><span><span class="ic" data-ic="apple" data-sz="16"></span>영양</span><span class="pct" id="pNut">0%</span></div><div class="bar-track"><div class="bar-fill" id="fNut"></div></div></div>
+      <div class="bar-item"><div class="bl"><span><span class="ic" data-ic="activity" data-sz="16"></span>운동</span><span class="pct" id="pEx">0%</span></div><div class="bar-track"><div class="bar-fill" id="fEx"></div></div></div>
+      <div class="bar-item"><div class="bl"><span><span class="ic" data-ic="smile" data-sz="16"></span>스트레스</span><span class="pct" id="pStr">0%</span></div><div class="bar-track"><div class="bar-fill" id="fStr"></div></div></div>
+    </div>
+
+    <!-- 성장도표 백분위 -->
+    <div class="section" id="pctSection">
+      <h3>현재 키 성장도표 백분위</h3>
+      <div class="h-sub">질병관리청 소아·청소년 성장도표 기준(근사치)</div>
+      <div class="pct-big"><span class="p" id="pctVal">—</span></div>
+      <div style="text-align:center;font-size:13.5px;color:var(--sub)" id="pctMsg"></div>
+      <div class="pct-line"><div class="pct-marker" id="pctMarker" style="left:50%"></div></div>
+      <div class="pct-scale"><span>작은 편</span><span>또래 평균</span><span>큰 편</span></div>
+    </div>
+
+    <!-- 맞춤 팁 -->
+    <div class="section">
+      <h3>우리 아이 맞춤 성장 팁</h3>
+      <div class="h-sub">키의 약 70~80%는 후천적 관리로 채워져요</div>
+      <div id="tipList"></div>
+
+      <div class="principle">
+        <div class="p-title"><span class="ic" data-ic="lightbulb" data-sz="18"></span>키 성장의 핵심 원리</div>
+        <p>키는 팔다리 뼈 끝의 <b>성장판(골단연골)</b>이 열려 있는 동안, 연골이 새로운 뼈로 바뀌며 자랍니다. 이 과정은 <b>성장호르몬(GH)</b>과 간·연골에서 만들어지는 <b>IGF-1</b>이 주도하고, 사춘기의 성호르몬이 성장을 급격히 촉진한 뒤 결국 성장판을 닫아 성장을 마무리합니다.</p>
+        <p>따라서 키를 키우려면 ① <b>성장판이 닫히기 전</b>(사춘기 전~중기)이라는 <b>시기</b>가 가장 중요하고, ② 그 시기에 <b>수면·영양·운동</b>으로 GH·IGF-1 분비와 뼈 형성을 최대한 지원하는 것이 핵심입니다.</p>
+        <p class="p-warn"><span class="ic" data-ic="alert-triangle" data-sz="15"></span>소아 비만은 사춘기를 앞당겨 성장판을 일찍 닫히게 해 <b>최종 키를 오히려 낮출 수 있으므로</b> 적정 체중 유지가 중요합니다. 또래보다 성장이 뚜렷이 더디거나 사춘기가 지나치게 빠르면 <b>소아내분비 전문의 상담</b>을 권합니다.</p>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      본 예측은 부모·조부모 키 유전 공식과 생활습관 설문을 바탕으로 한 <b>통계적 참고값</b>이며, 의학적 진단이 아닙니다. 생활습관 요소는 키를 정확히 수치화할 수 없어 '경향'으로만 반영됩니다. 정확한 진단은 성장클리닉의 골연령 검사를 권장합니다. 입력하신 정보는 서버에 저장되지 않고 기기 안에서만 계산됩니다.
+    </div>
+
+    <div class="restart">
+      <button onclick="restart()"><span class="ic" data-ic="rotate-ccw" data-sz="15" style="margin-right:5px;vertical-align:-3px"></span>다시 계산하기</button>
+    </div>
+  </div>
+
+  <!-- ===== Footer ===== -->
+  <div class="footer" id="footer">
+    <div>© Produced by You Seung-oh. yso21@naver.com, All rights reserved.</div>
+    <div class="music">Music | <a href="https://youtube.com/@pianocanvas" target="_blank" rel="noopener">https://youtube.com/@pianocanvas</a></div>
+  </div>
+
+</div>
+
+<!-- ===== Footer nav ===== -->
+<div class="nav" id="nav">
+  <button class="btn-prev hidden" id="btnPrev" onclick="prev()">이전</button>
+  <button class="btn-next" id="btnNext" onclick="next()">다음</button>
+</div>
+
+<script>
+/* ================= Lucide icons (inline SVG, MIT) ================= */
+var LUCIDE={
+  moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  apple:'<path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/>',
+  activity:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  smile:'<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/>',
+  hourglass:'<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+  lightbulb:'<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+  'alert-triangle':'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  'rotate-ccw':'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'
+};
+function svgIcon(name,size){
+  size=size||20;
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(LUCIDE[name]||'')+'</svg>';
+}
+function renderStaticIcons(){
+  document.querySelectorAll('.ic[data-ic]').forEach(function(el){
+    if(el.getAttribute('data-done'))return;
+    el.innerHTML=svgIcon(el.getAttribute('data-ic'),parseInt(el.getAttribute('data-sz'),10)||20);
+    el.setAttribute('data-done','1');
+  });
+}
+
+/* ================= State ================= */
+var state={
+  gender:null, birth:null, height:null, weight:null,
+  momH:null, dadH:null, gpP:null, gpM:null,
+  puberty:null,
+  sleep:null, nutrition:null, exercise:null, stress:null
+};
+var step=1;
+var TOTAL_STEPS=4; // 입력 스텝 수 (5는 결과)
+
+/* ================= 선택 버튼 (toggle / chips) ================= */
+document.querySelectorAll('.toggle,.chips').forEach(function(g){
+  var group=g.getAttribute('data-group');
+  g.querySelectorAll('button').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      g.querySelectorAll('button').forEach(function(b){b.classList.remove('sel');});
+      btn.classList.add('sel');
+      var v=btn.getAttribute('data-val');
+      state[group]=(g.classList.contains('chips'))?parseInt(v,10):v;
+    });
+  });
+});
+
+/* ================= Accordion ================= */
+function toggleAcc(){document.getElementById('gpAcc').classList.toggle('open');}
+
+/* ================= Nav ================= */
+function showStep(n){
+  document.querySelectorAll('.step').forEach(function(s){
+    s.classList.toggle('hidden', parseInt(s.getAttribute('data-step'),10)!==n);
+  });
+  // progress dots
+  var dots=document.querySelectorAll('#progress .dot');
+  dots.forEach(function(d,i){
+    d.classList.remove('active','done');
+    if(i+1<n) d.classList.add('done');
+    else if(i+1===n) d.classList.add('active');
+  });
+  // header/hero/progress visibility on result
+  var isResult=(n===5);
+  document.getElementById('hero').classList.toggle('hidden',isResult);
+  document.getElementById('progress').classList.toggle('hidden',isResult);
+  document.getElementById('footer').classList.toggle('hidden',!isResult);
+
+  // buttons
+  document.getElementById('btnPrev').classList.toggle('hidden', n===1 || isResult);
+  var nextBtn=document.getElementById('btnNext');
+  if(isResult){ document.getElementById('nav').classList.add('hidden'); }
+  else{
+    document.getElementById('nav').classList.remove('hidden');
+    if(n===TOTAL_STEPS){ nextBtn.textContent='최종 예측 신장보기'; nextBtn.className='btn-next btn-result'; }
+    else{ nextBtn.textContent='다음'; nextBtn.className='btn-next'; }
+  }
+  window.scrollTo(0,0);
+}
+
+function syncInputs(){
+  state.birth=document.getElementById('birth').value||null;
+  state.height=parseFloat(document.getElementById('height').value)||null;
+  state.weight=parseFloat(document.getElementById('weight').value)||null;
+  state.momH=parseFloat(document.getElementById('momH').value)||null;
+  state.dadH=parseFloat(document.getElementById('dadH').value)||null;
+  state.gpP=parseFloat(document.getElementById('gpP').value)||null;
+  state.gpM=parseFloat(document.getElementById('gpM').value)||null;
+}
+
+function validate(n){
+  syncInputs();
+  if(n===1){
+    if(!state.gender||!state.birth||!state.height||!state.weight){err(1);return false;}
+  }else if(n===2){
+    if(!state.momH||!state.dadH){err(2);return false;}
+  }else if(n===3){
+    if(!state.puberty){return false;}
+  }else if(n===4){
+    if(state.sleep==null||state.nutrition==null||state.exercise==null||state.stress==null){err(4);return false;}
+  }
+  return true;
+}
+function err(n){var e=document.getElementById('err'+n);if(e){e.classList.add('show');setTimeout(function(){e.classList.remove('show');},2500);}}
+
+function next(){
+  if(!validate(step))return;
+  if(step<TOTAL_STEPS){step++;showStep(step);}
+  else{ compute(); step=5; showStep(5); }
+}
+function prev(){ if(step>1){step--;showStep(step);} }
+function restart(){
+  step=1; showStep(1);
+}
+
+/* ================= 성장도표 근사 (질병관리청 2017 기반 근사치) ================= */
+var MEAN_BOY={3:96.5,4:103.1,5:109.6,6:115.9,7:122.1,8:127.9,9:133.4,10:138.8,11:144.7,12:151.4,13:158.6,14:165.0,15:169.2,16:171.4,17:172.6,18:173.6};
+var MEAN_GIRL={3:95.4,4:101.9,5:108.4,6:114.7,7:120.8,8:126.7,9:132.6,10:139.1,11:145.8,12:151.7,13:155.9,14:158.3,15:159.5,16:160.0,17:160.2,18:160.6};
+
+function ageYears(birth){
+  var b=new Date(birth), now=new Date();
+  return (now-b)/(365.25*24*3600*1000);
+}
+function meanHeight(age,gender){
+  var t=(gender==='male')?MEAN_BOY:MEAN_GIRL;
+  var a=Math.floor(age); if(a<3)a=3; if(a>17)a=17;
+  var lo=t[a], hi=t[a+1]!=null?t[a+1]:t[a];
+  var frac=age-Math.floor(age); if(age>=18)frac=0;
+  return lo+(hi-lo)*Math.min(Math.max(frac,0),1);
+}
+function sdHeight(age){ return age<10?5.0:6.3; }
+
+/* normal CDF */
+function erf(x){
+  var s=x<0?-1:1; x=Math.abs(x);
+  var t=1/(1+0.3275911*x);
+  var y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);
+  return s*y;
+}
+function normCdf(z){return 0.5*(1+erf(z/Math.SQRT2));}
+
+/* ================= 계산 ================= */
+function compute(){
+  syncInputs();
+  var isBoy=state.gender==='male';
+
+  /* 1) 유전 기본 예측 (Tanner MPH) */
+  var base=(state.dadH+state.momH+(isBoy?13:-13))/2;
+
+  /* 2) 조부모 가문 보정 (선택, 소폭) */
+  var gpNudge=0, gpCount=0;
+  if(state.gpP){gpNudge+=(state.gpP-165)*0.08;gpCount++;}
+  if(state.gpM){gpNudge+=(state.gpM-165)*0.08;gpCount++;}
+  gpNudge=Math.max(-2.5,Math.min(2.5,gpNudge));
+
+  /* 3) 성장환경 점수 → 소폭 가감 (±3cm) */
+  var s=state.sleep, nu=state.nutrition, ex=state.exercise, st=state.stress;
+  var score=Math.round((s+nu+ex+st)/4);
+  var envAdj=(score-50)/50*3;
+  // 사춘기 이미 시작 시 남은 성장 여력이 줄어 환경 보정 폭 축소
+  if(state.puberty==='yes') envAdj*=0.6;
+  envAdj=Math.round(envAdj*10)/10;
+
+  var center=base+gpNudge+envAdj;
+  center=Math.round(center*10)/10;
+  var low=Math.round((center-5)*10)/10, high=Math.round((center+5)*10)/10;
+
+  /* ==== 렌더 ==== */
+  document.getElementById('rGender').textContent=isBoy?'남아':'여아';
+  document.getElementById('rCenter').innerHTML=center.toFixed(1)+'<small>cm</small>';
+  document.getElementById('rRange').textContent=low.toFixed(1)+' ~ '+high.toFixed(1)+' cm';
+
+  document.getElementById('bdBase').textContent=base.toFixed(1)+' cm';
+  var gpRow=document.getElementById('bdGpRow');
+  if(gpCount>0){gpRow.style.display='';document.getElementById('bdGp').innerHTML=signed(gpNudge);}
+  else{gpRow.style.display='none';}
+  document.getElementById('bdEnv').innerHTML=signed(envAdj);
+  document.getElementById('bdTotal').textContent=center.toFixed(1)+' cm';
+
+  /* 점수 ring */
+  document.getElementById('scoreNum').textContent=score;
+  var deg=score*3.6;
+  document.getElementById('ring').style.background=
+    'conic-gradient('+ringColor(score)+' '+deg+'deg,#EFEBDD '+deg+'deg)';
+  document.getElementById('scoreMsg').innerHTML=scoreMessage(score);
+
+  setBar('Sleep',s); setBar('Nut',nu); setBar('Ex',ex); setBar('Str',st);
+
+  /* 백분위 */
+  var age=ageYears(state.birth);
+  if(age>=2 && age<=18){
+    var m=meanHeight(age,state.gender), sd=sdHeight(age);
+    var z=(state.height-m)/sd;
+    var pct=Math.round(normCdf(z)*100);
+    pct=Math.max(1,Math.min(99,pct));
+    var rankFromTall=100-pct;
+    document.getElementById('pctVal').textContent='백분위 '+pct+'%';
+    document.getElementById('pctMsg').textContent='또래 100명 중 키가 큰 순서로 약 '+rankFromTall+'번째예요.';
+    document.getElementById('pctMarker').style.left=pct+'%';
+    document.getElementById('pctSection').style.display='';
+  }else{
+    document.getElementById('pctSection').style.display='none';
+  }
+
+  /* 팁 */
+  renderTips({sleep:s,nutrition:nu,exercise:ex,stress:st,puberty:state.puberty});
+}
+
+function signed(v){
+  var r=(Math.round(v*10)/10).toFixed(1);
+  if(v>0)return '<span class="plus-v">+'+r+' cm</span>';
+  if(v<0)return '<span class="minus-v">'+r+' cm</span>';
+  return '± 0.0 cm';
+}
+function ringColor(sc){return sc>=70?'#5FB055':(sc>=45?'#F2B84B':'#E9825B');}
+function scoreMessage(sc){
+  if(sc>=80)return '<b>아주 좋아요!</b> 지금 습관을 유지하면 예상 키의 <b>상단</b>에 가까워질 가능성이 높아요.';
+  if(sc>=60)return '<b>양호해요.</b> 부족한 항목을 조금만 더 챙기면 성장 여력을 더 끌어올릴 수 있어요.';
+  if(sc>=40)return '<b>보통이에요.</b> 아래 팁을 참고해 습관을 개선하면 상단으로 이동할 수 있어요.';
+  return '<b>개선이 필요해요.</b> 수면·영양·운동 습관을 바꾸면 성장 잠재력을 더 살릴 수 있어요.';
+}
+function setBar(key,v){
+  var f=document.getElementById('f'+key), p=document.getElementById('p'+key);
+  f.style.width=v+'%';
+  f.classList.toggle('low',v<50);
+  p.textContent=v+'%';
+}
+
+var TIPS={
+  sleep:{ic:'moon',t:'깊고 충분한 수면',d:'성장호르몬(GH)의 60~70%는 잠든 직후 깊은 수면(서파수면) 단계에서 분비됩니다. 특히 밤 10시~새벽 2시에 분비가 집중되므로, 초등학생은 9~11시간(청소년 8~10시간)의 규칙적인 수면과 이른 취침이 중요해요. 잠들기 전 스마트폰의 블루라이트는 멜라토닌을 억제해 깊은 잠을 방해하니 피해주세요.'},
+  nutrition:{ic:'apple',t:'뼈와 연골을 만드는 영양',d:'키가 크려면 성장판 연골이 새 뼈로 바뀌어야 해요. 이때 단백질(체중 1kg당 하루 1g 이상 · 고기·생선·계란·콩·우유)이 뼈 기질과 IGF-1(성장인자) 생성의 핵심 재료이고, 칼슘·비타민D·아연이 뼈 무기질화를 돕습니다. 반대로 과도한 당분·가공식품은 인슐린·비만을 유발해 사춘기를 앞당기고 최종 키를 낮출 수 있어요.'},
+  exercise:{ic:'activity',t:'성장판을 자극하는 운동',d:'줄넘기·농구·달리기처럼 뼈에 세로 방향 충격을 주는 체중부하·점프 운동은 성장판을 자극하고 골밀도를 높입니다. 또 규칙적 운동은 성장호르몬 분비를 촉진해요. 하루 30분~1시간, 주 4회 이상을 권장하며, 어린 나이의 과도한 고중량 근력운동은 오히려 성장판에 부담이 될 수 있어 피하는 게 좋아요.'},
+  stress:{ic:'smile',t:'스트레스와 마음 건강',d:'만성 스트레스는 코르티솔을 높여 성장호르몬 분비를 억제합니다. 실제로 극심한 정서적 스트레스가 성장을 멈추게 하는 "심인성 왜소증"도 보고되어 있어요. 충분한 애정과 안정된 분위기, 규칙적인 생활 리듬이 성장에 도움이 됩니다.'}
+};
+function renderTips(v){
+  var order=['sleep','nutrition','exercise','stress'];
+  // 낮은 점수 우선 정렬
+  order.sort(function(a,b){return v[a]-v[b];});
+  var html='';
+  order.forEach(function(k){
+    var t=TIPS[k];
+    var status=v[k]>=90?' <span style="color:#5FB055;font-weight:700">(잘 하고 있어요!)</span>':(v[k]<50?' <span style="color:#E9825B;font-weight:700">(개선 필요)</span>':'');
+    html+='<div class="tip"><div class="ico">'+svgIcon(t.ic,20)+'</div><div class="tt"><b>'+t.t+status+'</b><span>'+t.d+'</span></div></div>';
+  });
+  if(v.puberty==='yes'){
+    html+='<div class="tip"><div class="ico">'+svgIcon('hourglass',20)+'</div><div class="tt"><b>사춘기 시작 시기</b><span>사춘기가 시작되면 성장 속도가 빨라지지만 성장판이 닫히는 시점도 가까워져요. 지금이 관리가 가장 중요한 시기예요.</span></div></div>';
+  }
+  document.getElementById('tipList').innerHTML=html;
+}
+
+/* init */
+renderStaticIcons();
+showStep(1);
+</script>
+</body>
+</html>
